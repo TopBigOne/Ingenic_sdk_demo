@@ -24,7 +24,7 @@
 #define TAG "Sample-AI"
 
 
-#define AI_BASIC_TEST_RECORD_FILE "ai_record.pcm"
+#define AI_BASIC_TEST_RECORD_FILE "./audio.pcm"
 #define AI_BASIC_TEST_RECORD_NUM 500
 
 static void *_ai_basic_record_test_thread(void *argv)

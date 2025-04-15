@@ -1,4 +1,4 @@
-CONFIG_UCLIBC_BUILD=y
+CONFIG_UCLIBC_BUILD=n
 
 CROSS_COMPILE ?= mips-linux-gnu-
 

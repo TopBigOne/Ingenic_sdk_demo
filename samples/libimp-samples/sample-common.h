@@ -34,11 +34,11 @@ extern "C"
 /******************************************** Sensor Attribute Table *********************************************/
 
 /* first sensor */
-#define FIRST_SNESOR_NAME           "imx327"                        //sensor name (match with snesor driver name)
-#define FIRST_I2C_ADDR              0x1a                            //sensor i2c address
+#define FIRST_SNESOR_NAME           "gc5603"                        //sensor name (match with snesor driver name)
+#define FIRST_I2C_ADDR              0x31                           //sensor i2c address
 #define FIRST_I2C_ADAPTER_ID        0                               //sensor controller number used (0/1/2/3)
-#define FIRST_SENSOR_WIDTH          1920                            //sensor width
-#define FIRST_SENSOR_HEIGHT         1080                            //sensor height
+#define FIRST_SENSOR_WIDTH          2880                            //sensor width
+#define FIRST_SENSOR_HEIGHT         1620                            //sensor height
 #define FIRST_RST_GPIO              GPIO_PA(18)                     //sensor reset gpio
 #define FIRST_PWDN_GPIO             GPIO_PA(19)                     //sensor pwdn gpio
 #define FIRST_POWER_GPIO            -1                              //sensor power gpio
@@ -70,8 +70,8 @@ extern "C"
 #define ENC_VIDEO_CHANNEL		0
 #define ENC_JPEG_CHANNEL		1
 
-#define STREAM_FILE_PATH_PREFIX		"/tmp"
-#define SNAP_FILE_PATH_PREFIX		"/tmp"
+#define STREAM_FILE_PATH_PREFIX		"./"
+#define SNAP_FILE_PATH_PREFIX		"./"
 
 #define OSD_REGION_WIDTH		16
 #define OSD_REGION_HEIGHT		34

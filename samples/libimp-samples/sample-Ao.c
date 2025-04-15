@@ -23,7 +23,7 @@
 #define AO_TEST_SAMPLE_RATE 16000
 #define AO_TEST_SAMPLE_TIME 20
 #define AO_TEST_BUF_SIZE (AO_TEST_SAMPLE_RATE * sizeof(short) * AO_TEST_SAMPLE_TIME / 1000)
-#define AO_BASIC_TEST_PLAY_FILE  "./ao_play.pcm"
+#define AO_BASIC_TEST_PLAY_FILE  "./audio.pcm"
 
 static void *_ao_test_play_thread(void *argv)
 {

@@ -46,7 +46,7 @@ struct chn_conf chn[FS_CHN_NUM] = {
 	{
 		.index = CH0_INDEX,
 		.enable = CHN0_EN,
-		.payloadType = IMP_ENC_PROFILE_HEVC_MAIN,
+		.payloadType = IMP_ENC_PROFILE_AVC_MAIN, //IMP_ENC_PROFILE_HEVC_MAIN,
 		.fs_chn_attr = {
 			.i2dattr.i2d_enable = 0,
 			.i2dattr.flip_enable = 0,
@@ -79,7 +79,7 @@ struct chn_conf chn[FS_CHN_NUM] = {
 	{
 		.index = CH1_INDEX,
 		.enable = CHN1_EN,
-		.payloadType = IMP_ENC_PROFILE_HEVC_MAIN,
+		.payloadType = IMP_ENC_PROFILE_AVC_MAIN, //IMP_ENC_PROFILE_HEVC_MAIN,
 		.fs_chn_attr = {
 			.i2dattr.i2d_enable = 0,
 			.i2dattr.flip_enable = 0,
