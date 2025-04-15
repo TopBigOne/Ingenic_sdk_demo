@@ -42,11 +42,14 @@ int direct_switch = 0;
 
 int gosd_enable = 0; /* 1: ipu osd, 2: isp osd, 3: ipu osd and isp osd */
 
+// 数组是3：
 struct chn_conf chn[FS_CHN_NUM] = {
+
+        // index 0:
 	{
-		.index = CH0_INDEX,
+		.index = CH0_INDEX, // 下标-0
 		.enable = CHN0_EN,
-		.payloadType = IMP_ENC_PROFILE_AVC_MAIN, //IMP_ENC_PROFILE_HEVC_MAIN,
+		.payloadType = IMP_ENC_PROFILE_AVC_MAIN, //IMP_ENC_PROFILE_HEVC_MAIN, ：h264
 		.fs_chn_attr = {
 			.i2dattr.i2d_enable = 0,
 			.i2dattr.flip_enable = 0,
@@ -74,8 +77,9 @@ struct chn_conf chn[FS_CHN_NUM] = {
 			.picHeight = FIRST_SENSOR_HEIGHT,
 		},
 		.framesource_chn =	{ DEV_ID_FS, CH0_INDEX, 0},
-		.imp_encoder = { DEV_ID_ENC, CH0_INDEX, 0},
+		.imp_encoder = { DEV_ID_ENC, CH0_INDEX, 0}, // 编码器
 	},
+    // index 1:
 	{
 		.index = CH1_INDEX,
 		.enable = CHN1_EN,
@@ -107,7 +111,7 @@ struct chn_conf chn[FS_CHN_NUM] = {
 			.picHeight = FIRST_SENSOR_HEIGHT_SECOND,
 		},
 		.framesource_chn =	{ DEV_ID_FS, CH1_INDEX, 0},
-		.imp_encoder = { DEV_ID_ENC, CH1_INDEX, 0},
+		.imp_encoder = { DEV_ID_ENC, CH1_INDEX, 0},// 编码器
 	},
 	{
 		.index = CH2_INDEX,
@@ -140,10 +144,11 @@ struct chn_conf chn[FS_CHN_NUM] = {
 			.picHeight = FIRST_SENSOR_HEIGHT_THIRD,
 		},
 		.framesource_chn =	{ DEV_ID_FS, CH2_INDEX, 0},
-		.imp_encoder = { DEV_ID_ENC, CH2_INDEX, 0},
+		.imp_encoder = { DEV_ID_ENC, CH2_INDEX, 0}, // 编码器
 	}
 };
 
+// 摄像头注册信息
 IMPSensorInfo Def_Sensor_Info[1] = {
 	{
 		FIRST_SNESOR_NAME,
@@ -164,22 +169,24 @@ IMPSensorInfo sensor_info[1];
 int sample_system_init()
 {
 	IMP_LOG_DBG(TAG, "sample_system_init start\n");
-
 	int ret = 0;
 
     /* isp osd and ipu osd buffer size set */
     if(1 == gosd_enable) { /* only use ipu osd */
+        // rmem池大小
 	    IMP_OSD_SetPoolSize(512*1024);
     } else if(2 == gosd_enable) { /* only use isp osd */
+        // 创建ISPOSD使用的rmem内存大小
 	    IMP_ISP_Tuning_SetOsdPoolSize(512 * 1024);
     }else if(3 == gosd_enable) { /* use ipu osd and isp osd */
 	    IMP_OSD_SetPoolSize(512*1024);
 	    IMP_ISP_Tuning_SetOsdPoolSize(512 * 1024);
     }
+    // 摄像头注册信息
 	memset(&sensor_info, 0, sizeof(sensor_info));
 	memcpy(&sensor_info[0], &Def_Sensor_Info[0], sizeof(IMPSensorInfo));
 
-	/* open isp */
+	/* open isp 打开ISP模块 */
 	ret = IMP_ISP_Open();
 	if(ret < 0){
 		IMP_LOG_ERR(TAG, "failed to open ISP\n");
@@ -187,6 +194,7 @@ int sample_system_init()
 	}
 
 	/* add sensor */
+    // 添加一个sensor，用于向ISP模块提供数据源 ：IMPVI_MAIN 主摄像头
 	ret = IMP_ISP_AddSensor(IMPVI_MAIN, &sensor_info[0]);
 	if(ret < 0){
 		IMP_LOG_ERR(TAG, "failed to AddSensor\n");
@@ -194,6 +202,7 @@ int sample_system_init()
 	}
 
 	/* enable sensor */
+    // 使用一个sensor
 	ret = IMP_ISP_EnableSensor(IMPVI_MAIN, &sensor_info[0]);
 	if(ret < 0){
 		IMP_LOG_ERR(TAG, "failed to EnableSensor\n");
@@ -216,11 +225,17 @@ int sample_system_init()
 
 	/* set contrast, sharpness, saturation, brightness */
 	unsigned char value = 128;
+    // 我个人理解：以下是给摄像头设置画面效果
+    // 设置ISP 综合效果图片对比度
 	IMP_ISP_Tuning_SetContrast(IMPVI_MAIN, &value);
+    // 设置ISP 综合效果图片锐度
 	IMP_ISP_Tuning_SetSharpness(IMPVI_MAIN, &value);
+    // 设置ISP 综合效果图片饱和度
 	IMP_ISP_Tuning_SetSaturation(IMPVI_MAIN, &value);
+    // 设置ISP 综合效果图片亮度
 	IMP_ISP_Tuning_SetBrightness(IMPVI_MAIN, &value);
 
+    // 主摄像头：摄像头模式： 白天模式
 	/* set runningmode */
 	IMPISPRunningMode dn = IMPISP_RUNNING_MODE_DAY;
 	ret = IMP_ISP_Tuning_SetISPRunningMode(IMPVI_MAIN, &dn);
@@ -230,6 +245,7 @@ int sample_system_init()
 	}
 
 	/* set fps */
+    // Sensor帧率
 	IMPISPSensorFps fpsAttr;
 	fpsAttr.num = FIRST_SENSOR_FRAME_RATE_NUM;
 	fpsAttr.den = FIRST_SENSOR_FRAME_RATE_DEN;
@@ -296,14 +312,17 @@ int sample_framesource_init()
 
 	int i, ret;
 
+    // 创建3个通道
 	for (i = 0; i < FS_CHN_NUM; i++) {
 		if (chn[i].enable) {
+            // 创建通道
 			ret = IMP_FrameSource_CreateChn(chn[i].index, &chn[i].fs_chn_attr);
 			if(ret < 0){
 				IMP_LOG_ERR(TAG, "IMP_FrameSource_CreateChn(chn%d) error !\n", chn[i].index);
 				return -1;
 			}
 
+            // 设置通道属性
 			ret = IMP_FrameSource_SetChnAttr(chn[i].index, &chn[i].fs_chn_attr);
 			if (ret < 0) {
 				IMP_LOG_ERR(TAG, "IMP_FrameSource_SetChnAttr(chn%d) error !\n",  chn[i].index);
@@ -345,8 +364,11 @@ int sample_encoder_init()
 
 	int i, ret, chnNum = 0;
 	int s32picWidth = 0,s32picHeight = 0;
+    // 通道属性
 	IMPFSChnAttr *imp_chn_attr_tmp;
+    // 编码Channel属性
 	IMPEncoderChnAttr channel_attr;
+    // I2D属性: 图片旋转等
 	IMPFSI2DAttr sti2dattr;
 	for (i = 0; i <  FS_CHN_NUM; i++) {
 		if (chn[i].enable) {
@@ -382,10 +404,14 @@ int sample_encoder_init()
 			ratio = ratio > 0.1 ? ratio : 0.1;
 			unsigned int uTargetBitRate = BITRATE_720P_Kbs * ratio;
 			printf("rcMode:%d.\n", S_RC_METHOD);
-			ret = IMP_Encoder_SetDefaultParam(&channel_attr, chn[i].payloadType, S_RC_METHOD,
+			ret = IMP_Encoder_SetDefaultParam(&channel_attr,
+                                              chn[i].payloadType,
+                                              S_RC_METHOD,// bitrate 模式
 					s32picWidth, s32picHeight,
-					imp_chn_attr_tmp->outFrmRateNum, imp_chn_attr_tmp->outFrmRateDen,
-					imp_chn_attr_tmp->outFrmRateNum * 2 / imp_chn_attr_tmp->outFrmRateDen, 2,
+					imp_chn_attr_tmp->outFrmRateNum,
+                    imp_chn_attr_tmp->outFrmRateDen,
+					imp_chn_attr_tmp->outFrmRateNum * 2 / imp_chn_attr_tmp->outFrmRateDen, // gop
+                    2,
 					(S_RC_METHOD == IMP_ENC_RC_MODE_FIXQP) ? 35 : -1,
 					uTargetBitRate);
 			if (ret < 0) {
@@ -454,12 +480,13 @@ int sample_encoder_init()
 				if (0 == chnNum) channel_attr.bEnableIvdc = true;
 			}
 
+            // 创建编码Channel
 			ret = IMP_Encoder_CreateChn(chnNum, &channel_attr);
 			if (ret < 0) {
 				IMP_LOG_ERR(TAG, "IMP_Encoder_CreateChn(%d) error !\n", chnNum);
 				return -1;
 			}
-
+            // 注册编码Channel到Group
 			ret = IMP_Encoder_RegisterChn(chn[i].index, chnNum);
 			if (ret < 0) {
 				IMP_LOG_ERR(TAG, "IMP_Encoder_RegisterChn(%d, %d) error: %d\n", chn[i].index, chnNum, ret);

@@ -94,10 +94,10 @@ extern "C"
 /*#define SUPPORT_RGB555LE*/
 
 struct chn_conf{
-	unsigned int index;//0 for main channel ,1 for second channel
+	unsigned int index;            //0 for main channel ,1 for second channel
 	unsigned int enable;
-	IMPEncoderProfile payloadType;
-	IMPFSChnAttr fs_chn_attr;
+	IMPEncoderProfile payloadType; // 画质类型
+	IMPFSChnAttr fs_chn_attr;      // 通道属性
 	IMPCell framesource_chn;
 	IMPCell imp_encoder;
 };
