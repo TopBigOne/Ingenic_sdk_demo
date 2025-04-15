@@ -27,7 +27,7 @@
 #include "bitmapinfo.h"
 #endif
 
-#define TAG "Sample-OSD"
+#define TAG "MU-Shi-San-Sample-OSD"
 
 #define OSD_LETTER_NUM 20
 
@@ -519,6 +519,7 @@ int sample_osd_exit(IMPRgnHandle *prHander,int grpNum)
 
 int main(int argc, char *argv[])
 {
+    puts(" Mu shi er------start ");
 	int i, ret;
 
 	if (argc >= 2) {
@@ -534,6 +535,7 @@ int main(int argc, char *argv[])
 	gosd_enable = 1;
 	/* Step.1 System init */
 	ret = sample_system_init();
+    puts(" ---------------------------------------------step 1");
 	if (ret < 0) {
 		IMP_LOG_ERR(TAG, "IMP_System_Init() failed\n");
 		return -1;
@@ -541,7 +543,8 @@ int main(int argc, char *argv[])
 
 	/* Step.2 FrameSource init */
 	ret = sample_framesource_init();
-	if (ret < 0) {
+    puts(" ---------------------------------------------step 2");
+    if (ret < 0) {
 		IMP_LOG_ERR(TAG, "FrameSource init failed\n");
 		return -1;
 	}
@@ -556,24 +559,28 @@ int main(int argc, char *argv[])
 			}
 		}
 	}
+    puts(" ---------------------------------------------step 3");
 
 	ret = sample_encoder_init();
 	if (ret < 0) {
 		IMP_LOG_ERR(TAG, "Encoder init failed\n");
 		return -1;
 	}
+    puts(" ---------------------------------------------step 3-1");
 
 	/* Step.4 OSD init */
 	if (IMP_OSD_CreateGroup(grpNum) < 0) {
 		IMP_LOG_ERR(TAG, "IMP_OSD_CreateGroup(%d) error !\n", grpNum);
 		return -1;
 	}
+    puts(" ---------------------------------------------step 4");
 
 	prHander = sample_osd_init(grpNum);
 	if (prHander <= 0) {
 		IMP_LOG_ERR(TAG, "OSD init failed\n");
 		return -1;
 	}
+    puts(" ---------------------------------------------step 4-1");
 
 	/* Step.5 Bind */
 	IMPCell osdcell = {DEV_ID_OSD, grpNum, 0};
@@ -582,12 +589,16 @@ int main(int argc, char *argv[])
 		IMP_LOG_ERR(TAG, "Bind FrameSource channel0 and OSD failed\n");
 		return -1;
 	}
+    puts(" ---------------------------------------------step 5");
 
-	ret = IMP_System_Bind(&osdcell, &chn[0].imp_encoder);
+
+
+    ret = IMP_System_Bind(&osdcell, &chn[0].imp_encoder);
 	if (ret < 0) {
 		IMP_LOG_ERR(TAG, "Bind OSD and Encoder failed\n");
 		return -1;
 	}
+    puts(" ---------------------------------------------step 5-1");
 
 	/* Step.6 Create OSD bgramap update thread */
 	pthread_t tid;
@@ -596,6 +607,7 @@ int main(int argc, char *argv[])
 		IMP_LOG_ERR(TAG, "thread create error\n");
 		return -1;
 	}
+    puts(" ---------------------------------------------step 6");
 
 	/* Step.7 Stream On */
 	IMP_FrameSource_SetFrameDepth(0, 0);
@@ -604,8 +616,9 @@ int main(int argc, char *argv[])
 		IMP_LOG_ERR(TAG, "ImpStreamOn failed\n");
 		return -1;
 	}
+    puts(" ---------------------------------------------step 7");
 
-	/* Step.6 Get stream */
+	/* Step.8 Get stream */
 	if (byGetFd) {
 		ret = sample_get_video_stream_byfd();
 		if (ret < 0) {
@@ -619,6 +632,7 @@ int main(int argc, char *argv[])
 			return -1;
 		}
 	}
+    puts(" ---------------------------------------------step 8");
 
 	/* Exit sequence as follow */
 	/* Step.a Stream Off */
@@ -627,6 +641,7 @@ int main(int argc, char *argv[])
 		IMP_LOG_ERR(TAG, "FrameSource StreamOff failed\n");
 		return -1;
 	}
+    puts(" ---------------------------------------------step 9");
 
 	pthread_cancel(tid);
 	pthread_join(tid, NULL);
@@ -637,6 +652,7 @@ int main(int argc, char *argv[])
 		IMP_LOG_ERR(TAG, "Bind OSD and Encoder failed\n");
 		return -1;
 	}
+    puts(" ---------------------------------------------step 10");
 
 	ret = IMP_System_UnBind(&chn[0].framesource_chn, &osdcell);
 	if (ret < 0) {
@@ -650,6 +666,7 @@ int main(int argc, char *argv[])
 		IMP_LOG_ERR(TAG, "OSD exit failed\n");
 		return -1;
 	}
+    puts(" ---------------------------------------------step 11");
 
 	/* Step.d Encoder exit */
 	ret = sample_encoder_exit();
@@ -664,6 +681,7 @@ int main(int argc, char *argv[])
 		IMP_LOG_ERR(TAG, "FrameSource exit failed\n");
 		return -1;
 	}
+    puts(" ---------------------------------------------step 12");
 
 	/* Step.f System exit */
 	ret = sample_system_exit();
@@ -671,6 +689,7 @@ int main(int argc, char *argv[])
 		IMP_LOG_ERR(TAG, "sample_system_exit() failed\n");
 		return -1;
 	}
+    puts(" ---------------------------------------------step 13");
 
 	return 0;
 }
