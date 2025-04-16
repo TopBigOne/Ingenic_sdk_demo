@@ -87,7 +87,7 @@ static int osd_show(void) {
  * @param p
  * @return
  */
-static void *update_thread(void *p) {
+static void *update_thread2(void *p) {
     PRINT_CURR_FUNC(__FUNCTION__)
     int ret;
 
@@ -230,6 +230,114 @@ static void *update_thread(void *p) {
 
     return NULL;
 }
+
+
+
+static void *update_thread(void *p) {
+    PRINT_CURR_FUNC(__FUNCTION__)
+    int ret;
+
+    /*generate time*/
+    char DateStr[40];
+    time_t currTime;
+    struct tm *currDate;
+    unsigned i = 0, j = 0;
+    void *dateData = NULL;
+    char *data = NULL;
+    IMPOSDRgnAttr rAttr;
+
+    ret = osd_show();
+    if (ret < 0) {
+        IMP_LOG_ERR(TAG, "OSD show error\n");
+        return NULL;
+    }
+
+    while (1) {
+        int penpos = 0;
+        int penpos_t = 0;
+        int fontadv = 0;
+        unsigned int len = 0;
+
+        ret = IMP_OSD_GetRgnAttr(prHander[0], &rAttr);
+        int result = IMP_OSD_GetRegionLuma(prHander[0], &rAttr);
+        if (result == -1)
+            continue;
+
+        data = (void *) rAttr.data.bitmapData;
+        time(&currTime);
+        currDate = localtime(&currTime);
+        memset(DateStr, 0, 40);
+        strftime(DateStr, 40, "%Y-%m-%d %I:%M:%S", currDate);
+        len = strlen(DateStr);
+        for (i = 0; i < len; i++) {
+            switch (DateStr[i]) {
+                case '0' ... '9':
+#ifdef SUPPORT_COLOR_REVERSE
+                    if(rAttr.fontData.colType[i] == 1) {
+                        dateData = (void *)gBitmap_black[DateStr[i] - '0'].pdata;
+                    } else {
+                        dateData = (void *)gBitmap[DateStr[i] - '0'].pdata;
+                    }
+#else
+                    dateData = (void *) gBitmap[DateStr[i] - '0'].pdata;
+#endif
+                    fontadv = gBitmap[DateStr[i] - '0'].width;
+                    penpos_t += gBitmap[DateStr[i] - '0'].width;
+                    break;
+                case '-':
+#ifdef SUPPORT_COLOR_REVERSE
+                    if(rAttr.fontData.colType[i] == 1) {
+                        dateData = (void *)gBitmap_black[10].pdata;
+                    } else {
+                        dateData = (void *)gBitmap[10].pdata;
+                    }
+#else
+                    dateData = (void *) gBitmap[10].pdata;
+#endif
+                    fontadv = gBitmap[10].width;
+                    penpos_t += gBitmap[10].width;
+                    break;
+                case ' ':
+                    dateData = (void *) gBitmap[11].pdata;
+                    fontadv = gBitmap[11].width;
+                    penpos_t += gBitmap[11].width;
+                    break;
+                case ':':
+#ifdef SUPPORT_COLOR_REVERSE
+                    if(rAttr.fontData.colType[i] == 1) {
+                        dateData = (void *)gBitmap_black[12].pdata;
+                    } else {
+                        dateData = (void *)gBitmap[12].pdata;
+                    }
+#else
+                    dateData = (void *) gBitmap[12].pdata;
+#endif
+                    fontadv = gBitmap[12].width;
+                    penpos_t += gBitmap[12].width;
+                    break;
+                default:
+                    break;
+            }
+#ifdef SUPPORT_RGB555LE
+            for (j = 0; j < OSD_REGION_HEIGHT; j++) {
+                memcpy((void *)((uint16_t *)data + j*OSD_LETTER_NUM*OSD_REGION_WIDTH + penpos_t),
+                        (void *)((uint16_t *)dateData + j*fontadv), fontadv*sizeof(uint16_t));
+            }
+#else
+            for (j = 0; j < gBitmapHight; j++) {
+                memcpy((void *) (data + j * OSD_LETTER_NUM * OSD_REGION_WIDTH + penpos),
+                       (void *) (dateData + j * fontadv), fontadv);
+            }
+            penpos = penpos_t;
+#endif
+        }
+
+        sleep(1);
+    }
+
+    return NULL;
+}
+
 
 IMPRgnHandle *sample_osd_init(int grpNum) {
     puts(__FUNCTION__);
