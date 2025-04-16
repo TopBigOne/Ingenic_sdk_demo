@@ -82,6 +82,7 @@ static int osd_show(void) {
     return 0;
 }
 
+#define MAX_TIME_STR_LEN 64
 /**
  * 刷新覆盖物线程
  * @param p
@@ -92,8 +93,8 @@ static void *update_thread2(void *p) {
     int ret;
 
     /*generate time*/
-    unsigned time_str_length = 64;
-    char DateStr[time_str_length];
+
+    char DateStr[MAX_TIME_STR_LEN];
     time_t currTime;
     struct tm *currDate;
     unsigned i = 0, j = 0;
@@ -132,18 +133,17 @@ static void *update_thread2(void *p) {
         time(&currTime);
         // 转换为本地时间（struct tm）
         currDate = localtime(&currTime);
-        memset(DateStr, 0, time_str_length);
+        memset(DateStr, 0, sizeof(DateStr));
         // 格式化为字符串
-        strftime(DateStr, time_str_length, "%Y-%m-%d %I:%M:%S", currDate);
+        strftime(DateStr, sizeof(DateStr), "%Y-%m-%d %I:%M:%S", currDate);
 
-        size_t remaining_size = sizeof(DateStr) - strlen(DateStr);
         const char  * append_str ="暮十二";
-
+        size_t remaining_size = sizeof(DateStr) - strlen(DateStr);
         if(remaining_size>= strlen(append_str)){
             snprintf(DateStr+ strlen(DateStr),
                      remaining_size,
                      "%s",
-                     "暮十二");
+                     append_str);
         } else{
             IMP_LOG_ERR(TAG," append Mu shi er in failure.");
 
@@ -773,7 +773,8 @@ int main(int argc, char *argv[]) {
 
     /* Step.6 Create OSD bgramap update thread */
     pthread_t tid;
-    ret = pthread_create(&tid, NULL, update_thread, NULL);
+//    ret = pthread_create(&tid, NULL, update_thread, NULL);
+    ret = pthread_create(&tid, NULL, update_thread2, NULL);
     if (ret) {
         IMP_LOG_ERR(TAG, "thread create error\n");
         return -1;
