@@ -33,6 +33,10 @@
 
 #define OSD_LETTER_NUM 20
 
+
+#define PRINT_CURR_FUNC(method_name) puts((method_name));
+
+
 extern struct chn_conf chn[];
 static int byGetFd = 0;
 extern int gosd_enable;
@@ -40,8 +44,14 @@ extern int gosd_enable;
 int grpNum = 0;
 IMPRgnHandle *prHander;
 
+
+/**
+ * 显示osd 覆盖物
+ * @return
+ */
 static int osd_show(void) {
     int ret;
+    PRINT_CURR_FUNC(__FUNCTION__)
 
     ret = IMP_OSD_ShowRgn(prHander[0], grpNum, 1);
     if (ret != 0) {
@@ -72,19 +82,29 @@ static int osd_show(void) {
     return 0;
 }
 
+/**
+ * 刷新覆盖物线程
+ * @param p
+ * @return
+ */
 static void *update_thread(void *p) {
+    PRINT_CURR_FUNC(__FUNCTION__)
     int ret;
 
     /*generate time*/
-    char DateStr[40];
+    unsigned time_str_length = 64;
+    char DateStr[time_str_length];
     time_t currTime;
     struct tm *currDate;
     unsigned i = 0, j = 0;
     void *dateData = NULL;
     char *data = NULL;
+    // OSD区域属性
     IMPOSDRgnAttr rAttr;
 
+    // 开始显示覆盖物,里面有5个overlay
     ret = osd_show();
+    // just check
     if (ret < 0) {
         IMP_LOG_ERR(TAG, "OSD show error\n");
         return NULL;
@@ -96,33 +116,62 @@ static void *update_thread(void *p) {
         int fontadv = 0;
         unsigned int len = 0;
 
+        // prHander[0]: 是时间句柄
+        // 得到字体覆盖物属性
         ret = IMP_OSD_GetRgnAttr(prHander[0], &rAttr);
-        int result = IMP_OSD_GetRegionLuma(prHander[0], &rAttr);
-        if (result == -1)
-            continue;
 
+        int result = IMP_OSD_GetRegionLuma(prHander[0], &rAttr);
+        if (result == -1){
+            continue;
+        }
+
+
+        // 点阵数据
         data = (void *) rAttr.data.bitmapData;
+        // 获取当前时间戳
         time(&currTime);
+        // 转换为本地时间（struct tm）
         currDate = localtime(&currTime);
-        memset(DateStr, 0, 40);
-        strftime(DateStr, 40, "%Y-%m-%d %I:%M:%S", currDate);
+        memset(DateStr, 0, time_str_length);
+        // 格式化为字符串
+        strftime(DateStr, time_str_length, "%Y-%m-%d %I:%M:%S", currDate);
+
+        size_t remaining_size = sizeof(DateStr) - strlen(DateStr);
+        const char  * append_str ="暮十二";
+
+        if(remaining_size>= strlen(append_str)){
+            snprintf(DateStr+ strlen(DateStr),
+                     remaining_size,
+                     "%s",
+                     "暮十二");
+        } else{
+            IMP_LOG_ERR(TAG," append Mu shi er in failure.");
+
+        }
         len = strlen(DateStr);
+        IMP_LOG_INFO(TAG," the final str length is : %s",len);
+        // 时间字符串解析
         for (i = 0; i < len; i++) {
             switch (DateStr[i]) {
                 case '0' ... '9':
-#ifdef SUPPORT_COLOR_REVERSE
+#ifdef SUPPORT_COLOR_REVERSE // 颜色反转支持（可选）
                     if(rAttr.fontData.colType[i] == 1) {
+                        // / 反色位图
                         dateData = (void *)gBitmap_black[DateStr[i] - '0'].pdata;
                     } else {
+                        // 正常位图
                         dateData = (void *)gBitmap[DateStr[i] - '0'].pdata;
                     }
 #else
+                    // 数字位图
                     dateData = (void *) gBitmap[DateStr[i] - '0'].pdata;
 #endif
+                    // 字符宽度
                     fontadv = gBitmap[DateStr[i] - '0'].width;
+                    // 更新写入位置
                     penpos_t += gBitmap[DateStr[i] - '0'].width;
                     break;
-                case '-':
+                case '-':// '-' 符号位图
 #ifdef SUPPORT_COLOR_REVERSE
                     if(rAttr.fontData.colType[i] == 1) {
                         dateData = (void *)gBitmap_black[10].pdata;
@@ -135,12 +184,12 @@ static void *update_thread(void *p) {
                     fontadv = gBitmap[10].width;
                     penpos_t += gBitmap[10].width;
                     break;
-                case ' ':
+                case ' ':// 空格位图
                     dateData = (void *) gBitmap[11].pdata;
                     fontadv = gBitmap[11].width;
                     penpos_t += gBitmap[11].width;
                     break;
-                case ':':
+                case ':':// ':' 符号位图
 #ifdef SUPPORT_COLOR_REVERSE
                     if(rAttr.fontData.colType[i] == 1) {
                         dateData = (void *)gBitmap_black[12].pdata;
@@ -157,19 +206,25 @@ static void *update_thread(void *p) {
                     break;
             }
 #ifdef SUPPORT_RGB555LE
-            for (j = 0; j < OSD_REGION_HEIGHT; j++) {
-                memcpy((void *)((uint16_t *)data + j*OSD_LETTER_NUM*OSD_REGION_WIDTH + penpos_t),
-                        (void *)((uint16_t *)dateData + j*fontadv), fontadv*sizeof(uint16_t));
-            }
+            // RGB555 小端模式处理
+             for (j = 0; j < OSD_REGION_HEIGHT; j++) {
+                 memcpy((void *)((uint16_t *)data + j*OSD_LETTER_NUM*OSD_REGION_WIDTH + penpos_t),
+                         (void *)((uint16_t *)dateData + j*fontadv), fontadv*sizeof(uint16_t));
+             }
 #else
+            // 默认处理（可能是 8bpp 灰度）
             for (j = 0; j < gBitmapHight; j++) {
+                // 将位图数据逐行写入 OSD 缓冲区。
                 memcpy((void *) (data + j * OSD_LETTER_NUM * OSD_REGION_WIDTH + penpos),
-                       (void *) (dateData + j * fontadv), fontadv);
+                       (void *) (dateData + j * fontadv),
+                       fontadv);
             }
             penpos = penpos_t;
 #endif
         }
 
+
+        // 帧率控制 :每秒更新一次
         sleep(1);
     }
 
@@ -177,8 +232,8 @@ static void *update_thread(void *p) {
 }
 
 IMPRgnHandle *sample_osd_init(int grpNum) {
-    puts(__FUNCTION__ );
-    printf("    grpNum : %d",grpNum);
+    puts(__FUNCTION__);
+    printf("    grpNum : %d", grpNum);
     int ret = 0;
     IMPRgnHandle *prHander = NULL;
 
@@ -446,6 +501,7 @@ IMPRgnHandle *sample_osd_init(int grpNum) {
         return NULL;
     }
 
+    //  给指针赋值
     prHander[0] = rHanderFont;
     prHander[1] = rHanderLogo;
     prHander[2] = rHanderCover;
