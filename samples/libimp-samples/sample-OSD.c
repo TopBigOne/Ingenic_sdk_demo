@@ -20,6 +20,8 @@
 
 #include "sample-common.h"
 #include "logodata_100x100_bgra.h"
+#include <locale.h>  // 添加locale支持
+#include <wchar.h>   // 添加宽字符支持
 
 #ifdef SUPPORT_RGB555LE
 #include "bgramapinfo_rgb555le.h"
@@ -83,6 +85,7 @@ static int osd_show(void) {
 }
 
 #define MAX_TIME_STR_LEN 64
+
 /**
  * 刷新覆盖物线程
  * @param p
@@ -120,9 +123,10 @@ static void *update_thread2(void *p) {
         // prHander[0]: 是时间句柄
         // 得到字体覆盖物属性
         ret = IMP_OSD_GetRgnAttr(prHander[0], &rAttr);
+        PRINT_CURR_FUNC("--------ok_1")
 
         int result = IMP_OSD_GetRegionLuma(prHander[0], &rAttr);
-        if (result == -1){
+        if (result == -1) {
             continue;
         }
 
@@ -134,24 +138,35 @@ static void *update_thread2(void *p) {
         // 转换为本地时间（struct tm）
         currDate = localtime(&currTime);
         memset(DateStr, 0, sizeof(DateStr));
+
+
         // 格式化为字符串
         strftime(DateStr, sizeof(DateStr), "%Y-%m-%d %I:%M:%S", currDate);
+        PRINT_CURR_FUNC("--------ok_2")
+        printf("                DateStr : %s\n", DateStr);
 
-        const char  * append_str ="暮十二";
-        size_t remaining_size = sizeof(DateStr) - strlen(DateStr);
-        if(remaining_size>= strlen(append_str)){
-            snprintf(DateStr+ strlen(DateStr),
-                     remaining_size,
-                     "%s",
-                     append_str);
-        } else{
-            IMP_LOG_ERR(TAG," append Mu shi er in failure.");
 
+        const char *append_str = ":1316";
+        size_t current_len = strlen(DateStr);
+
+// 检查剩余空间是否足够（包括终止符）
+        if (current_len + strlen(append_str) + 1 <= sizeof(DateStr)) {
+// 直接拼接字符串（不需要 snprintf）
+            strcat(DateStr, append_str);
+            printf("                Modified DateStr : %s\n", DateStr);
+        } else {
+            IMP_LOG_ERR(TAG, "Append failed: buffer full\n");
         }
+
+
         len = strlen(DateStr);
-        IMP_LOG_INFO(TAG," the final str length is : %s",len);
+        PRINT_CURR_FUNC("--------ok_5")
+        printf(" the final str length is : %d\n", len);
+        printf(" the final str  is       : %s\n", DateStr);
         // 时间字符串解析
         for (i = 0; i < len; i++) {
+
+
             switch (DateStr[i]) {
                 case '0' ... '9':
 #ifdef SUPPORT_COLOR_REVERSE // 颜色反转支持（可选）
@@ -230,7 +245,6 @@ static void *update_thread2(void *p) {
 
     return NULL;
 }
-
 
 
 static void *update_thread(void *p) {
@@ -341,7 +355,7 @@ static void *update_thread(void *p) {
 
 IMPRgnHandle *sample_osd_init(int grpNum) {
     puts(__FUNCTION__);
-    printf("    grpNum : %d", grpNum);
+    printf("    grpNum : %d\n", grpNum);
     int ret = 0;
     IMPRgnHandle *prHander = NULL;
 
@@ -685,7 +699,9 @@ int sample_osd_exit(IMPRgnHandle *prHander, int grpNum) {
 
 
 int main(int argc, char *argv[]) {
-    puts(" ---------------------------------------------Mu shi er -start");
+    puts(" ---------------------------------------------- 暮十二 start");
+    puts(" ---------------------------------------------- 暮十二 start");
+    puts(" ---------------------------------------------- 暮十二 start");
     int i, ret;
 
     if (argc >= 2) {
@@ -862,6 +878,9 @@ int main(int argc, char *argv[]) {
         return -1;
     }
     puts(" ---------------------------------------------step 13");
+    puts(" ---------------------------------------------- 暮十二 end");
+    puts(" ---------------------------------------------- 暮十二 end");
+    puts(" ---------------------------------------------- 暮十二 end");
 
     return 0;
 }

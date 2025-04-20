@@ -1,12 +1,14 @@
 CONFIG_UCLIBC_BUILD=n
 
-CROSS_COMPILE ?= mips-linux-gnu-
+#CROSS_COMPILE ?= mips-linux-gnu-
+CROSS_COMPILE ?=/home/dev/Documents/Android_work/Hai_si_work/hai_si/mips_gcc720_glibc229_r5_1_4/bin/mips-linux-gnu-
 
 CC = $(CROSS_COMPILE)gcc
 CPLUSPLUS = $(CROSS_COMPILE)g++
 LD = $(CROSS_COMPILE)ld
 AR = $(CROSS_COMPILE)ar cr
-STRIP = $(CROSS_COMPILE)strip
+# 是否包含strip
+#STRIP = $(CROSS_COMPILE)strip
 
 CFLAGS = $(INCLUDES) -O2 -Wall -march=mips32r2
 
@@ -31,7 +33,7 @@ LDFLAG += -Wl,-gc-sections
 
 SAMPLES = sample-Encoder-video \
 	sample-IspOsd \
-	sample-OSD \
+	sample-Mu-OSD \
 	sample-Audio \
 	sample-Ai \
 	sample-Ao \
@@ -114,7 +116,8 @@ sample-IspOsd: $(SDK_LIB_DIR)/libimp.a $(SDK_LIB_DIR)/libalog.a sample-common.o 
 		$(CPLUSPLUS) $(LDFLAG) -o $@ $^ $(LIBS) -lpthread -lm -lrt
 			$(STRIP) $@
 
-sample-OSD: $(SDK_LIB_DIR)/libimp.a $(SDK_LIB_DIR)/libalog.a sample-common.o sample-OSD.o
+# 覆盖物OSD
+sample-Mu-OSD: $(SDK_LIB_DIR)/libimp.a $(SDK_LIB_DIR)/libalog.a sample-common.o sample-OSD.o
 	$(CPLUSPLUS) $(LDFLAG) -o $@ $^ $(LIBS) -lpthread -lm -lrt
 	$(STRIP) $@
 
@@ -193,7 +196,7 @@ sample-Soft-photosensitive: $(SDK_LIB_DIR)/libimp.a $(SDK_LIB_DIR)/libalog.a sam
 sample-Encoder-video-direct: $(SDK_LIB_DIR)/libimp.a $(SDK_LIB_DIR)/libalog.a sample-common.o sample-Encoder-video-direct.o
 	$(CPLUSPLUS) $(LDFLAG) -o $@ $^ $(LIBS) -lpthread -lm -lrt -ldl
 	$(STRIP) $@
-
+# case : Encoder覆盖物
 sample-Encoder-OSD: $(SDK_LIB_DIR)/libimp.a $(SDK_LIB_DIR)/libalog.a sample-common.o sample-Encoder-OSD.o
 	$(CPLUSPLUS) $(LDFLAG) -o $@ $^ $(LIBS) -lpthread -lm -lrt -ldl
 	$(STRIP) $@
@@ -206,3 +209,6 @@ clean:
 
 distclean: clean
 	rm -f $(SAMPLES)
+
+#/home/dev/Documents/Android_work/Hai_si_work/hai_si/mips_gcc720_glibc229_r5_1_4/bin
+#/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
