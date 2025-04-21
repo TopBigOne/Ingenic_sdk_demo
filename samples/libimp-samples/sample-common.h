@@ -52,46 +52,57 @@ extern "C"
 #define CHN2_EN                 0
 
 /* Crop_en Choose */
-#define FIRST_CROP_EN					0
+#define FIRST_CROP_EN					0      // 是否启用图像裁剪（0：禁用，1：启用）
 
-#define FIRST_SENSOR_FRAME_RATE_NUM			25
-#define FIRST_SENSOR_FRAME_RATE_DEN			1
+// 	作用：配置摄像头传感器的输出帧率为 25fps（25/1 = 25）。
+#define FIRST_SENSOR_FRAME_RATE_NUM			25// 帧率分子（25fps）
+#define FIRST_SENSOR_FRAME_RATE_DEN			1  // 帧率分母
 
-#define FIRST_SENSOR_WIDTH_SECOND			640
-#define FIRST_SENSOR_HEIGHT_SECOND			360
+#define FIRST_SENSOR_WIDTH_SECOND			640// 第二路视频流的宽度
+#define FIRST_SENSOR_HEIGHT_SECOND			360// 第二路视频流的高度
 
-#define FIRST_SENSOR_WIDTH_THIRD			1280
-#define FIRST_SENSOR_HEIGHT_THIRD			720
+	// 支持多路视频流输出（如主码流 1080P + 子码流 720P + 低分辨率流 640x360）。
+#define FIRST_SENSOR_WIDTH_THIRD			1280// 第三路视频流的宽度
+#define FIRST_SENSOR_HEIGHT_THIRD			720// 第三路视频流的高度
 
-#define BITRATE_720P_Kbs        1000
-#define NR_FRAMES_TO_SAVE		200
-#define STREAM_BUFFER_SIZE		(1 * 1024 * 1024)
-
-#define ENC_VIDEO_CHANNEL		0
-#define ENC_JPEG_CHANNEL		1
-
-#define STREAM_FILE_PATH_PREFIX		"./"
-#define SNAP_FILE_PATH_PREFIX		"./"
-
-#define OSD_REGION_WIDTH		16
-#define OSD_REGION_HEIGHT		34
-#define OSD_REGION_WIDTH_SEC	8
-#define OSD_REGION_HEIGHT_SEC   18
+#define BITRATE_720P_Kbs        1000 // 720P 视频的码率（1000 Kbps）
+#define NR_FRAMES_TO_SAVE		2000 // 保存的帧数（用于测试）
+#define STREAM_BUFFER_SIZE		(1 * 1024 * 1024) // 流缓冲区大小（1MB）,编码器输出流的缓冲区大小。
 
 
-#define SLEEP_TIME			1
+// 区分视频（H.264/H.265）和 JPEG（抓图）的编码通道。
+// 君正芯片通常支持多通道并行编码（如一路录像 + 一路抓图）。
+#define ENC_VIDEO_CHANNEL		0 // 视频编码通道号
+#define ENC_JPEG_CHANNEL		1 // JPEG 编码通道号
 
-#define FS_CHN_NUM			3
-#define IVS_CHN_ID          1
+	// 文件路径
+#define STREAM_FILE_PATH_PREFIX		"./" // 视频流保存路径
+#define SNAP_FILE_PATH_PREFIX		"./" // 抓图保存路径
 
-#define CH0_INDEX  	0
-#define CH1_INDEX  	1
-#define CH2_INDEX  	2
+	// 定义 OSD 叠加层的大小（如显示时间戳、水印等）
+	// 不同分辨率可配置不同的 OSD 区域（如主码流和子码流独立配置）。
+#define OSD_REGION_WIDTH		16 // OSD 区域的宽度（字符宽度）
+#define OSD_REGION_HEIGHT		34 // OSD 区域的高度（字符高度）
+#define OSD_REGION_WIDTH_SEC	8  // 第二路 OSD 的宽度
+#define OSD_REGION_HEIGHT_SEC   18 // 第二路 OSD 的高度
 
-#define CHN_ENABLE 		1
-#define CHN_DISABLE 	0
+
+
+#define SLEEP_TIME			1 // 循环延迟时间（秒）
+
+#define FS_CHN_NUM			3 // 文件系统的通道数量
+#define IVS_CHN_ID          1 // 智能分析（IVS）通道号 ,智能分析（如移动检测、人脸识别）绑定的通道。
+
+#define CH0_INDEX  	0  // 通道 0 的索引
+#define CH1_INDEX  	1  // 通道 1 的索引
+#define CH2_INDEX  	2  // 通道 2 的索引
+
+#define CHN_ENABLE 		1 // 通道使能标志
+#define CHN_DISABLE 	0 // 通道禁用标志
 
 /*#define SUPPORT_RGB555LE*/
+
+#define PRINT_CURR_FUNC(method_name) puts((method_name));
 
 struct chn_conf{
 	unsigned int index;            //0 for main channel ,1 for second channel
@@ -108,16 +119,16 @@ typedef struct {
 }streamInfo;
 
 typedef struct {
-	IMPEncoderEncType type;
-	IMPEncoderRcMode mode;
-	uint16_t frameRate;
-	uint16_t gopLength;
-	uint32_t targetBitrate;
-	uint32_t maxBitrate;
-	int16_t initQp;
-	int16_t minQp;
-	int16_t maxQp;
-	uint32_t maxPictureSize;
+	IMPEncoderEncType type;// 编码器类型（如 H.264/H.265/JPEG）
+	IMPEncoderRcMode mode; // 码率控制模式（固定码率、可变码率等）
+	uint16_t frameRate; // 	目标帧率（帧/秒）
+	uint16_t gopLength; // GOP（关键帧间隔），即两个 I 帧之间的帧数
+	uint32_t targetBitrate; // 目标码率（单位：Kbps）
+	uint32_t maxBitrate; // 	最大码率（单位：Kbps，VBR 模式下生效）
+	int16_t initQp; // 初始量化参数（QP值，影响画质，值越小画质越高）	26
+	int16_t minQp; // 最小量化参数（QP下限）允许的最佳画质
+	int16_t maxQp; // 最大量化参数（QP上限） 允许的最低画质
+	uint32_t maxPictureSize; // 单帧最大大小（单位：字节，用于限制突发帧体积）
 } encInfo;
 
 typedef struct sample_osd_param{
