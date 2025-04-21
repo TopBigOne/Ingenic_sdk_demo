@@ -36,7 +36,7 @@
 #define OSD_LETTER_NUM 20
 
 
-#define PRINT_CURR_FUNC(method_name) puts((method_name));
+
 
 
 extern struct chn_conf chn[];
