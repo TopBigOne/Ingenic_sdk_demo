@@ -125,6 +125,7 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    //----------------------流数据获取完毕-------------------------------------------
     /* Step.b UnBind */
     for (i = 0; i < FS_CHN_NUM; i++) {
         if (chn[i].enable) {
