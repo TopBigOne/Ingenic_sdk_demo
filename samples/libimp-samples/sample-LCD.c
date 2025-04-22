@@ -1,5 +1,5 @@
 /*
- * sample-lcd.c
+ * Sample-LCD
  *
  * Copyright (C) 2014 Ingenic Semiconductor Co.,Ltd
  */
@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "sample-common.h"
-
+// 液晶设备显示
 #define TAG "Sample-LCD"
 extern struct chn_conf chn[];
 

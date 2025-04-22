@@ -42,13 +42,13 @@ int direct_switch = 0;
 
 int gosd_enable = 0; /* 1: ipu osd, 2: isp osd, 3: ipu osd and isp osd */
 
-// 数组是3：
+//  通道配置数组是3：
 struct chn_conf chn[FS_CHN_NUM] = {
 
-    // index 0:
+    // index 0:--------------------------------------------------------------------------------------------------
     {
         .index = CH0_INDEX, // 下标-0
-        .enable = CHN0_EN,
+        .enable = CHN0_EN, // : 1
         .payloadType = IMP_ENC_PROFILE_AVC_MAIN, //IMP_ENC_PROFILE_HEVC_MAIN, ：h264
         .fs_chn_attr = {
             .i2dattr.i2d_enable = 0,
@@ -79,11 +79,11 @@ struct chn_conf chn[FS_CHN_NUM] = {
         .framesource_chn = {DEV_ID_FS, CH0_INDEX, 0},
         .imp_encoder = {DEV_ID_ENC, CH0_INDEX, 0}, // 编码器
     },
-    // index 1:
+    // index 1:--------------------------------------------------------------------------------------------------
     {
         .index = CH1_INDEX,
-        .enable = CHN1_EN,
-        .payloadType = IMP_ENC_PROFILE_AVC_MAIN, //IMP_ENC_PROFILE_HEVC_MAIN,
+        .enable = CHN1_EN, // : 1
+        .payloadType = IMP_ENC_PROFILE_AVC_MAIN, //IMP_ENC_PROFILE_HEVC_MAIN, h264-main
         .fs_chn_attr = {
             .i2dattr.i2d_enable = 0,
             .i2dattr.flip_enable = 0,
@@ -113,10 +113,11 @@ struct chn_conf chn[FS_CHN_NUM] = {
         .framesource_chn = {DEV_ID_FS, CH1_INDEX, 0},
         .imp_encoder = {DEV_ID_ENC, CH1_INDEX, 0}, // 编码器
     },
+    // index 2:--------------------------------------------------------------------------------------------------
     {
         .index = CH2_INDEX,
-        .enable = CHN2_EN,
-        .payloadType = IMP_ENC_PROFILE_HEVC_MAIN,
+        .enable = CHN2_EN,// enable = 0;
+        .payloadType = IMP_ENC_PROFILE_HEVC_MAIN, // h265-main
         .fs_chn_attr = {
             .i2dattr.i2d_enable = 0,
             .i2dattr.flip_enable = 0,
@@ -151,8 +152,8 @@ struct chn_conf chn[FS_CHN_NUM] = {
 // 摄像头注册信息
 IMPSensorInfo Def_Sensor_Info[1] = {
     {
-        FIRST_SNESOR_NAME,
-        TX_SENSOR_CONTROL_INTERFACE_I2C,
+        FIRST_SNESOR_NAME, // "gc5603"
+        TX_SENSOR_CONTROL_INTERFACE_I2C, // I2C控制总线
         .i2c = {FIRST_SNESOR_NAME, FIRST_I2C_ADDR, FIRST_I2C_ADAPTER_ID},
         FIRST_RST_GPIO,
         FIRST_PWDN_GPIO,
@@ -360,8 +361,8 @@ int sample_framesource_exit() {
 }
 
 int sample_encoder_init() {
-    IMP_LOG_DBG(TAG, "sample_encoder_init start\n");
-    PRINT_CURR_FUNC(__FUNCTION__)
+    IMP_LOG_DBG(TAG, "sample_encoder_init() ------------------------------------------------- start\n");
+
 
     int i, ret, chnNum = 0;
     int s32picWidth = 0, s32picHeight = 0;
@@ -385,8 +386,9 @@ int sample_encoder_init() {
                 return -1;
             }
 
-            if ((1 == sti2dattr.i2d_enable) &&
-                ((sti2dattr.rotate_enable) && (sti2dattr.rotate_angle == 90 || sti2dattr.rotate_angle == 270))) {
+            if ((1 == sti2dattr.i2d_enable) && //  可用？
+                ((sti2dattr.rotate_enable) && // 旋转
+                    (sti2dattr.rotate_angle == 90 || sti2dattr.rotate_angle == 270))) {
                 /*this depend on your sensor or channels*/
                 //s32picWidth = (chn[i].fs_chn_attr.picHeight +15) & (~15);
                 //s32picHeight = (chn[i].fs_chn_attr.picWidth +15) & (~15);
@@ -396,15 +398,27 @@ int sample_encoder_init() {
                 s32picWidth = chn[i].fs_chn_attr.picWidth;
                 s32picHeight = chn[i].fs_chn_attr.picHeight;
             }
+            // 分辨率缩放比例（ratio） 的逻辑
             float ratio = 1;
+            // case 1:当输入分辨率 大于 1280×720 时，ratio > 1（需要增强处理）
             if (((uint64_t) s32picWidth * s32picHeight) > (1280 * 720)) {
                 ratio = log10f(((uint64_t) s32picWidth * s32picHeight) / (1280 * 720.0)) + 1;
             } else {
+                // case 2: 当输入分辨率 小于 1280×720 时，ratio < 1（需要减弱处理）
                 ratio = 1.0 / (log10f((1280 * 720.0) / ((uint64_t) s32picWidth * s32picHeight)) + 1);
             }
+
+            printf("    Resolution: %dx%d, Ratio: %.3f\n", s32picWidth, s32picHeight, ratio);
+
+
             ratio = ratio > 0.1 ? ratio : 0.1;
+
+            // 通过ratio得到一个码率
             unsigned int uTargetBitRate = BITRATE_720P_Kbs * ratio;
-            printf("rcMode:%d.\n", S_RC_METHOD);
+
+            printf("    uTargetBitRate: %d.\n", uTargetBitRate);
+            printf("    码率控制模型    : %d.\n", S_RC_METHOD);
+            // 设置编码默认属性
             ret = IMP_Encoder_SetDefaultParam(&channel_attr,
                                               chn[i].payloadType,
                                               S_RC_METHOD, // bitrate 模式
@@ -416,6 +430,7 @@ int sample_encoder_init() {
                                               2,
                                               (S_RC_METHOD == IMP_ENC_RC_MODE_FIXQP) ? 35 : -1,
                                               uTargetBitRate);
+            PRINT_CURR_FUNC("   start set video encoder params.")
             if (ret < 0) {
                 IMP_LOG_ERR(TAG, "IMP_Encoder_SetDefaultParam(%d) error !\n", chnNum);
                 return -1;
@@ -666,13 +681,13 @@ static int save_stream(int fd, IMPEncoderStream *stream) {
         // 码流包长度
         if (pack->length) {
             puts("                                                                  ");
-            printf("|----------------------------------------------------------|\n");
-            printf("| stream_seq      : %d\n",stream->seq);
-            printf("| stream_size     : %d\n",stream->streamSize);
-            printf("| stream_vir_Addr : 0x%" PRIx32 "\n", stream->phyAddr);
-            printf("| pack offset     : 0x%" PRIx32 "\n",stream->pack->offset);
-            printf("| pack length     : %d\n",stream->pack->length);
-            printf("|----------------------------------------------------------|\n");
+            printf("            |----------------------------------------------------------|\n");
+            printf("            | stream_seq      : %d\n",stream->seq);
+            printf("            | stream_size     : %d\n",stream->streamSize);
+            printf("            | stream_vir_Addr : 0x%" PRIx32 "\n", stream->phyAddr);
+            printf("            | pack offset     : 0x%" PRIx32 "\n",stream->pack->offset);
+            printf("            | pack length     : %d\n",stream->pack->length);
+            printf("            |----------------------------------------------------------|\n");
             puts("                                                                  ");
 
             // 关键计算1：计算当前包在环形缓冲区中的剩余空间

@@ -60,7 +60,7 @@ rm -f /home/dev/Desktop/for_tftp/sample-Encoder-video
 rm -f /home/dev/Desktop/for_tftp/stream-chn0-2880x1620.h264
 cp -a /home/dev/Documents/Android_work/Hai_si_work/hai_si/Ingenic_sdk_demo/samples/libimp-samples/sample-Encoder-video /home/dev/Desktop/for_tftp/sample-Encoder-video
 ```
-
+* get 
 ```shell
 tftp -g -r sample-Encoder-video 192.168.0.196
 ```

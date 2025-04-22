@@ -47,12 +47,12 @@
  *		@endcode
  * Step.6 Get stream 获取码流
  *		@code
- *			ret = IMP_Encoder_StartRecvPic(chnNum) //编码chnnel开始接受图像
- *			ret = IMP_Encoder_PollingStream(chnNum, 1000) //对编码chnnel中码流进行polling
- *			ret = IMP_Encoder_GetStream(chnNum, &stream, 1) //获取编码码流
- *			ret = save_stream(stream_fd, &stream) //将结果保存到打开的文件描述符
- *			ret = IMP_Encoder_ReleaseStream(chnNum, &stream) //释放编码码流, 与IMP_Encoder_GetStream成对使用
- *			ret = IMP_Encoder_StopRecvPic(chnNum) //编码chnnel停止接受图像
+ *			ret = IMP_Encoder_StartRecvPic(chnNum)            //编码chnnel开始接受图像
+ *			ret = IMP_Encoder_PollingStream(chnNum, 1000)     //对编码chnnel中码流进行polling
+ *			ret = IMP_Encoder_GetStream(chnNum, &stream, 1)   //获取编码码流
+ *			ret = save_stream(stream_fd, &stream)             //将结果保存到打开的文件描述符
+ *			ret = IMP_Encoder_ReleaseStream(chnNum, &stream)  //释放编码码流, 与IMP_Encoder_GetStream成对使用
+ *			ret = IMP_Encoder_StopRecvPic(chnNum)             //编码chnnel停止接受图像
  *		@endcode
  * Step.7 Stream Off 不使能Framesource chnnel, 停止输出图像
  *		@code
@@ -72,7 +72,7 @@
  *		@code
  *			ret = IMP_FrameSource_DestroyChn(chn[i].index) //销毁channel
  *		@endcode
- * Step.11 System exit 系统反初始化
+ * Step.11 System exit 系统 反 初始化
  *		@code
  *			ret = IMP_ISP_DisableTuning() //不使能ISP tuning
  *			ret = IMP_System_Exit() //系统反初始化
