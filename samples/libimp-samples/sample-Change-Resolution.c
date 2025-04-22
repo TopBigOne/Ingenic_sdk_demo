@@ -67,11 +67,14 @@ static void *res_get_video_stream(void *args)
 	int stream_fd = -1, totalSaveCnt = 0;
 
 	val = (int)args;
+	// 提取val的低16位数值 :
 	chnNum = val & 0xffff;
+	// 先右移16位，将高16位移到低16位
+	// 再与0xffff做与运算，提取这16位
 	encType = (val >> 16) & 0xffff;
 
 	/* Step.1 Start receive picture*/
-	ret = IMP_Encoder_StartRecvPic(chnNum);
+	ret = IMP_Encoder_StartRecvPic(chnNum);// 开启编码Channel接收图像
 	if (ret < 0) {
 		IMP_LOG_ERR(TAG, "IMP_Encoder_StartRecvPic(%d) failed\n", chnNum);
 		return ((void *)-1);
@@ -81,7 +84,7 @@ static void *res_get_video_stream(void *args)
 		chn[chnNum].fs_chn_attr.picWidth, chn[chnNum].fs_chn_attr.picHeight,
 		(encType == IMP_ENC_TYPE_AVC) ? "h264" : "h265");
 
-	IMP_LOG_DBG(TAG, "Video ChnNum=%d Open Stream file %s ", chnNum, stream_path);
+	IMP_LOG_DBG(TAG, "	Video ChnNum=%d , Open Stream file %s ", chnNum, stream_path);
 
 	stream_fd = open(stream_path, O_RDWR | O_CREAT | O_TRUNC, 0777);
 	if (stream_fd < 0) {
@@ -243,6 +246,27 @@ int sample_res_deinit()
 	return 0;
 }
 
+/**
+ *  改变分辨率： 修改分辨率看 sample_res_deinit()
+ *  1. sample_framesource_streamoff()
+ *  2. IMP_System_UnBind()
+ *  3. sample_encoder_exit()
+ *  4. sample_framesource_exit()
+ *   说白了，就是先要释放以前的资源，然后 绑定，初始化
+ *   初始化流程：
+ *   1. IMP_FrameSource_CreateChn()
+ *   2. IMP_FrameSource_SetChnAttr()
+ *   3. IMP_Encoder_CreateGroup()
+ *   4. IMP_FrameSource_GetI2dAttr()
+ *   5. IMP_Encoder_SetDefaultParam()
+ *   6. IMP_System_Bind()
+ *   7. IMP_FrameSource_EnableChn()
+ *
+ *
+ * @param argc
+ * @param argv
+ * @return
+ */
 int main(int argc, char *argv[])
 {
 	int ret;
